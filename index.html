@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZP10 Master Pro Trainer</title>
+    <!-- Tailwind CSS for utility-first styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for clean monochrome iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for ultra-clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- MarkedJS for high-fidelity markdown parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: {
+                            50: '#fafafa',
+                            100: '#f4f4f5',
+                            200: '#e4e4e7',
+                            300: '#d4d4d8',
+                            400: '#a1a1aa',
+                            500: '#71717a',
+                            600: '#52525b',
+                            700: '#3f3f46',
+                            800: '#27272a',
+                            900: '#18181b',
+                            950: '#09090b'
+                        },
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            transition-property: background-color, border-color, text-color, fill, stroke;
+            transition-duration: 200ms;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e4e4e7;
+            border-radius: 4px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #27272a;
+        }
+        
+        /* 3D Flip Mechanics for Flashcards */
+        .flip-card-inner {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+        }
+        .flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Markdown Styling inside rendered feedback areas */
+        .markdown-render h1, .markdown-render h2, .markdown-render h3 {
+            font-weight: 700;
+            color: #09090b;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .dark .markdown-render h1, .dark .markdown-render h2, .dark .markdown-render h3 {
+            color: #ffffff;
+        }
+        .markdown-render h2 { font-size: 1.1rem; }
+        .markdown-render h3 { font-size: 1rem; }
+        .markdown-render p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+        .markdown-render ul, .markdown-render ol {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+            list-style-type: disc;
+        }
+        .markdown-render ol {
+            list-style-type: decimal;
+        }
+        .markdown-render li {
+            margin-bottom: 0.25rem;
+        }
+        .markdown-render strong {
+            font-weight: 600;
+            color: #09090b;
+        }
+        .dark .markdown-render strong {
+            color: #ffffff;
+        }
+    </style>
+    
+    <!-- Script block preventing flash on load -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('zp10_theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+</head>
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 font-sans min-h-screen flex flex-col md:flex-row antialiased">
+
+    <!-- MOBILE HEADER NAVIGATION -->
+    <header class="md:hidden w-full bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 h-14 px-4 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center space-x-2">
+            <div class="bg-zinc-900 dark:bg-zinc-100 p-1.5 rounded text-white dark:text-zinc-950">
+                <i class="fa-solid fa-folder-open text-xs"></i>
+            </div>
+            <span class="font-semibold text-zinc-950 dark:text-white text-sm">ZP10 Master Pro</span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <!-- Mobile Dark Mode Toggle -->
+            <button onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                <i id="theme-icon-mobile" class="fa-solid fa-sun dark:hidden"></i>
+                <i id="theme-icon-mobile-dark" class="fa-solid fa-moon hidden dark:inline-block"></i>
+            </button>
+            <!-- Hamburger Drawer Trigger -->
+            <button onclick="toggleMobileMenu()" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                <i id="menu-icon" class="fa-solid fa-bars text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- DRAWER SIDEBAR BACKDROP -->
+    <div id="sidebar-backdrop" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/40 dark:bg-black/60 z-20 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
+
+    <!-- DESKTOP / MOBILE COLLAPSIBLE SIDEBAR -->
+    <aside id="sidebar" class="fixed md:sticky top-0 left-0 h-screen w-72 bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        
+        <!-- Workspace Logo / Title -->
+        <div class="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="bg-zinc-900 dark:bg-zinc-100 p-2 rounded-lg text-white dark:text-zinc-950">
+                    <i class="fa-solid fa-folder-open text-base"></i>
+                </div>
+                <div>
+                    <h1 class="font-semibold text-zinc-950 dark:text-white tracking-tight text-sm">ZP10 Workspace</h1>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-wider">Lern- &amp; Übungsportal</span>
+                </div>
+            </div>
+            
+            <!-- Desktop Dark Mode Toggle -->
+            <button onclick="toggleTheme()" class="hidden md:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400" title="Design umschalten">
+                <i id="theme-icon-desktop" class="fa-solid fa-sun dark:hidden"></i>
+                <i id="theme-icon-desktop-dark" class="fa-solid fa-moon hidden dark:inline-block"></i>
+            </button>
+        </div>
+
+        <!-- GAMIFIED STATS CARD -->
+        <div class="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/30">
+            <div class="flex justify-between text-[11px] text-zinc-500 dark:text-zinc-400 font-semibold uppercase tracking-wider mb-2">
+                <span>Stufe <span id="user-level">1</span></span>
+                <span class="text-zinc-400 dark:text-zinc-500"><span id="user-xp">0</span> / <span id="next-level-xp">100</span> XP</span>
+            </div>
+            <div class="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                <div id="xp-bar" class="bg-brand-600 dark:bg-brand-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+            <div class="flex justify-between items-center mt-3 text-xs text-zinc-400 dark:text-zinc-500">
+                <span class="flex items-center space-x-1">
+                    <i class="fa-solid fa-bolt text-zinc-600 dark:text-zinc-400 text-[10px]"></i>
+                    <span>Streak: <strong id="user-streak" class="text-zinc-700 dark:text-zinc-300 font-bold">1</strong> Tag(e)</span>
+                </span>
+                <span id="xp-bonus-tag" class="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-0.5 rounded-md">Bereit</span>
+            </div>
+        </div>
+
+        <!-- NAVIGATION LINKS -->
+        <nav id="nav-menu" class="flex flex-col flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <span class="px-3 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 block">Allgemein</span>
+            
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800">
+                <i class="fa-solid fa-compass text-base text-zinc-600 dark:text-zinc-400"></i>
+                <span>Mein Dashboard</span>
+            </button>
+
+            <span class="px-3 pt-5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 block">Mathematik</span>
+
+            <button onclick="switchTab('math-theory')" id="btn-math-theory" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-file-invoice text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Mathe-Theorie &amp; Formeln</span>
+            </button>
+
+            <button onclick="switchTab('math-trainer')" id="btn-math-trainer" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-calculator text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Unendlich-Trainer (Mathe)</span>
+            </button>
+
+            <span class="px-3 pt-5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 block">Englisch</span>
+
+            <button onclick="switchTab('english-theory')" id="btn-english-theory" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-paragraph text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Englisch-Theorie &amp; Skills</span>
+            </button>
+
+            <button onclick="switchTab('english-reading')" id="btn-english-reading" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-align-left text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Reading Comprehension</span>
+            </button>
+
+            <button onclick="switchTab('english-vocabulary')" id="btn-english-vocabulary" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-server text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Vokabel-Flashcards</span>
+            </button>
+
+            <button onclick="switchTab('english-ai-writer')" id="btn-english-ai-writer" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-wand-magic-sparkles text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>KI-Schreibwerkstatt</span>
+            </button>
+
+            <span class="px-3 pt-5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2 block">Diagnostik</span>
+
+            <button onclick="switchTab('simulator')" id="btn-simulator" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100">
+                <i class="fa-solid fa-circle-check text-base text-zinc-400 dark:text-zinc-500"></i>
+                <span>Prüfungs-Simulator</span>
+            </button>
+        </nav>
+
+        <!-- Sidebar Footer Info -->
+        <div class="p-6 border-t border-zinc-200 dark:border-zinc-800 text-[10px] text-zinc-400 dark:text-zinc-500 flex flex-col space-y-2">
+            <div class="flex items-center space-x-2">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                <span>Daten lokal gespeichert</span>
+            </div>
+            <span>ZP10 Workspace v3.0</span>
+        </div>
+    </aside>
+
+    <!-- MAIN INTERACTIVE WRAPPER -->
+    <main class="flex-1 min-w-0 flex flex-col relative">
+        
+        <!-- MINIMAL TOAST SYSTEM (In-app notifications) -->
+        <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-12 opacity-0 transition-all duration-300 max-w-sm w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden pointer-events-none">
+            <div class="p-4 flex items-center space-x-3">
+                <div id="toast-icon-bg" class="p-1.5 rounded-md text-zinc-600 dark:text-zinc-300">
+                    <i id="toast-icon" class="fa-solid text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <p id="toast-title" class="font-semibold text-xs text-zinc-900 dark:text-white"></p>
+                    <p id="toast-msg" class="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP CONTENT PAGES CONTAINER -->
+        <div class="p-4 md:p-12 flex-1 max-w-5xl w-full mx-auto">
+
+            <!-- TAB: DASHBOARD -->
+            <section id="tab-dashboard" class="space-y-8 animate-fade-in">
+                <!-- Welcome Banner -->
+                <div class="border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-xl p-6 md:p-8 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div class="space-y-3 max-w-2xl">
+                        <span class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">ZP10 Workspace</span>
+                        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">Systematische Prüfungsvorbereitung</h2>
+                        <p class="text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed">
+                            Willkommen in deiner strukturierten Vorbereitungszentrale. Dieses Portal bündelt das relevante Prüfungswissen für die Fächer Mathematik und Englisch. Nutze die unbegrenzten Rechenmodule und Textkompetenzbereiche, um dein Prüfungsniveau kontinuierlich zu testen.
+                        </p>
+                        <div class="pt-2 flex flex-wrap gap-2">
+                            <button onclick="switchTab('math-trainer')" class="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-xs font-medium px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+                                <i class="fa-solid fa-play text-[10px]"></i>
+                                <span>Mathe trainieren</span>
+                            </button>
+                            <button onclick="switchTab('english-ai-writer')" class="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 text-xs font-medium px-4 py-2 rounded-lg transition-all flex items-center space-x-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[10px] text-brand-500"></i>
+                                <span>Schreibwerkstatt (KI)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Dashboard Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Stats Card 1 -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center space-x-4">
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <i class="fa-solid fa-layer-group text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider block">Absolvierte Aufgaben</span>
+                            <span id="stat-solved" class="text-lg font-semibold text-zinc-950 dark:text-white">0</span>
+                        </div>
+                    </div>
+                    <!-- Stats Card 2 -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center space-x-4">
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <i class="fa-solid fa-chart-pie text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider block">Erfolgsquote</span>
+                            <span id="stat-accuracy" class="text-lg font-semibold text-zinc-950 dark:text-white">0%</span>
+                        </div>
+                    </div>
+                    <!-- Stats Card 3 -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center space-x-4">
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <i class="fa-solid fa-graduation-cap text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider block">Lernstatus</span>
+                            <span id="stat-rank" class="text-xs font-semibold text-zinc-950 dark:text-white truncate">Einführungsphase</span>
+                        </div>
+                    </div>
+                    <!-- Stats Card 4 -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl p-5 border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center space-x-4">
+                        <div class="p-2.5 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <i class="fa-solid fa-calendar-day text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider block">Lernserie (Tage)</span>
+                            <span id="stat-streak" class="text-lg font-semibold text-zinc-950 dark:text-white">1 Tag</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Structured Learning Guides -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- ZP10 Information -->
+                    <div class="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-info text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-sm text-zinc-950 dark:text-white">Prüfungsbedingungen (NRW Richtlinien)</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/60 space-y-1.5">
+                                <span class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">📐 Mathematik</span>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                    <strong>Teil 1: Basiskompetenzen</strong> (hilfsmittelfrei, ca. 30 Min.). Taschenrechner und Formelsammlung sind untersagt. <br>
+                                    <strong>Teil 2: Kontextaufgaben</strong> (Taschenrechner erlaubt, ca. 120 Min.). Formale Darstellungen und Rechnungsbeweise werden stark gewichtet.
+                                </p>
+                            </div>
+                            <div class="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800/60 space-y-1.5">
+                                <span class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">🇬🇧 Englisch</span>
+                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                    <strong>Teil 1: Hörverstehen &amp; Leseverstehen</strong>. Analyse komplexer authentischer Texte sowie logisches Schlussfolgern.<br>
+                                    <strong>Teil 2: Textproduktion</strong>. Verfassen von begründeten Kommentaren oder formellen Briefen unter systematischer Nutzung von Konnektoren.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between flex-wrap gap-2">
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500">Lokale Speicherverwaltung. Keine Cloud-Datenübertragung.</span>
+                            <button onclick="resetAppStats()" class="text-[10px] text-red-600 dark:text-red-400 hover:text-red-700 font-semibold transition-colors flex items-center space-x-1">
+                                <i class="fa-solid fa-trash-can text-[9px]"></i> <span>Daten löschen</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Achievements & Badges -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-4">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center space-x-2">
+                            <i class="fa-solid fa-award text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-sm text-zinc-950 dark:text-white">Kompetenznachweise</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div id="badge-first-step" class="flex items-center space-x-3 p-2.5 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 grayscale transition-all duration-300">
+                                <div class="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-sm">
+                                    <i class="fa-solid fa-seedling"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-zinc-900 dark:text-zinc-200 leading-none">Erster Erfolg</p>
+                                    <p class="text-[9px] text-zinc-400 dark:text-zinc-500 mt-0.5">Mind. 1 korrekte Antwort gegeben</p>
+                                </div>
+                            </div>
+                            <div id="badge-math-whiz" class="flex items-center space-x-3 p-2.5 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 grayscale transition-all duration-300">
+                                <div class="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-sm">
+                                    <i class="fa-solid fa-divide"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-zinc-900 dark:text-zinc-200 leading-none">Mathematische Konstanz</p>
+                                    <p class="text-[9px] text-zinc-400 dark:text-zinc-500 mt-0.5">10 Matheaufgaben gelöst</p>
+                                </div>
+                            </div>
+                            <div id="badge-shakespeare" class="flex items-center space-x-3 p-2.5 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/40 grayscale transition-all duration-300">
+                                <div class="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-sm">
+                                    <i class="fa-solid fa-spell-check"></i>
+                                </div>
+                                <div>
+                                    <p class="text-[11px] font-semibold text-zinc-900 dark:text-zinc-200 leading-none">Linguistisches Niveau</p>
+                                    <p class="text-[9px] text-zinc-400 dark:text-zinc-500 mt-0.5">10 Englisch-Aufgaben gelöst</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: MATHEMATICS THEORY -->
+            <section id="tab-math-theory" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Mathematik: Fachwissenschaftliche Dokumentation</h2>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Zusammenfassung der prüfungsrelevanten mathematischen Sätze, Definitionen und Formeln.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Functions -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-chart-line text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">1. Lineare &amp; Quadratische Funktionen</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Lineare Funktionenschar:</strong>
+                                Funktionsgleichung: <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">f(x) = m * x + b</code><br>
+                                <span class="text-zinc-500 dark:text-zinc-400">wobei <span class="italic font-semibold">m</span> die Steigung und <span class="italic font-semibold">b</span> den y-Achsenabschnitt darstellt.</span><br>
+                                Steigungsberechnung: <code class="font-mono text-[10px] dark:text-zinc-300">m = (y2 - y1) / (x2 - x1)</code>
+                            </div>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Quadratische Funktionen:</strong>
+                                Normalform: <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">f(x) = x² + p*x + q</code><br>
+                                Nullstellenbestimmung via <strong class="text-zinc-900 dark:text-white">p-q-Formel</strong>:<br>
+                                <code class="font-mono bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 px-1.5 py-0.5 rounded block mt-1.5 text-center text-[10px]">x1,2 = -(p/2) ± √((p/2)² - q)</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Geometry -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-vector-square text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">2. Trigonometrie &amp; Sätze</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Satzgruppe des Pythagoras:</strong>
+                                Im rechtwinkligen Dreieck gilt:<br>
+                                <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">a² + b² = c²</code><br>
+                                <span class="text-zinc-500 dark:text-zinc-400">Gilt ausschließlich im rechtwinkligen Dreieck (Winkel = 90°).</span>
+                            </div>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Winkelbeziehungen (Trigonometrie):</strong>
+                                <code class="block font-mono text-[10px] mb-1 dark:text-zinc-300">sin(α) = Gegenkathete / Hypotenuse</code>
+                                <code class="block font-mono text-[10px] mb-1 dark:text-zinc-300">cos(α) = Ankathete / Hypotenuse</code>
+                                <code class="block font-mono text-[10px] dark:text-zinc-300">tan(α) = Gegenkathete / Ankathete</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Probability -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-dice text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">3. Stochastik &amp; Wahrscheinlichkeit</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Laplace-Experimente:</strong>
+                                Wahrscheinlichkeit bei gleichen Eintrittschancen:<br>
+                                <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">P(E) = günstige Ergebnisse / mögliche Ergebnisse</code>
+                            </div>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Baumdiagramme:</strong>
+                                <ul class="list-disc list-inside space-y-1.5">
+                                    <li><strong>Pfadregel 1:</strong> Entlang eines Pfades multiplizieren.</li>
+                                    <li><strong>Pfadregel 2:</strong> Ergebnisse verschiedener Pfade addieren.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Percentages -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-percent text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">4. Prozentwert &amp; Zinsstruktur</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Prozent-Grundformel:</strong>
+                                <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">W = G * (p / 100)</code><br>
+                                <span class="text-zinc-500 dark:text-zinc-400">W = Prozentwert, G = Grundwert, p = Prozentsatz.</span>
+                            </div>
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-900 dark:text-white block mb-1">Zinseszinsformel:</strong>
+                                Kapital nach <span class="italic font-semibold">n</span> Jahren:<br>
+                                <code class="bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-800 dark:text-zinc-200 font-mono text-[10px] font-bold">Kn = K0 * (1 + p/100)^n</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: INFINITE MATHEMATICS TRAINER -->
+            <section id="tab-math-trainer" class="hidden space-y-6 animate-fade-in">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Mathematischer Übungsgenerator</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Löse fortlaufend, algorithmisch generierte Aufgaben mit reellen Zahlen.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Zielthema:</span>
+                        <select id="math-category-selector" onchange="generateMathTask()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-700 dark:text-zinc-300 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 focus:outline-none">
+                            <option value="all">Themenübergreifend</option>
+                            <option value="linear">Lineare Gleichungen</option>
+                            <option value="percent">Prozentrechnung</option>
+                            <option value="pythagoras">Satz des Pythagoras</option>
+                            <option value="quadratic">Quadratische Gleichungen</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Interactive Question Card -->
+                <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div class="p-4 bg-zinc-50/50 dark:bg-zinc-950/30 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap justify-between items-center gap-2">
+                        <span class="bg-zinc-200/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider" id="math-current-category-label">Lineare Gleichungen</span>
+                        <div class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">
+                            Erfolgreiche Aufgaben in dieser Session: <span id="session-math-count" class="text-zinc-900 dark:text-white font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6 md:p-8 space-y-6">
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest text-center">Aufgabenstellung</p>
+                        <h3 id="math-task-question" class="text-lg md:text-xl font-medium text-zinc-900 dark:text-white tracking-tight text-center max-w-2xl mx-auto leading-relaxed">Lade mathematische Modellierung...</h3>
+                        
+                        <!-- Feedback area -->
+                        <div id="math-feedback" class="hidden py-2.5 px-4 rounded-lg font-medium text-xs max-w-md mx-auto text-center border"></div>
+
+                        <!-- AI Math Coach Explanation Area -->
+                        <div id="math-ai-explanation-box" class="hidden mt-4 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 max-w-xl mx-auto space-y-3">
+                            <div class="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-800 pb-2">
+                                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> Gemini KI-Erklärung
+                                </span>
+                                <span class="text-[9px] text-zinc-400 dark:text-zinc-500">Schritt-für-Schritt Tutor</span>
+                            </div>
+                            <div id="math-ai-explanation-content" class="text-xs text-zinc-650 dark:text-zinc-350 leading-relaxed whitespace-pre-line text-left markdown-render">
+                                Generiere didaktische Erklärung...
+                            </div>
+                        </div>
+
+                        <!-- Answer Options -->
+                        <div id="math-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto pt-4">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-zinc-50/30 dark:bg-zinc-950/20 p-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center text-xs text-zinc-400 dark:text-zinc-500 flex-wrap gap-2">
+                        <span>Richtige Antworten geben +15 XP.</span>
+                        <button onclick="generateMathTask()" class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 flex items-center space-x-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200/60 dark:hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors">
+                            <i class="fa-solid fa-arrow-rotate-right"></i>
+                            <span>Überspringen</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: ENGLISH THEORY & SKILLS -->
+            <section id="tab-english-theory" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Englisch: Kompetenzbereiche &amp; Methodenlehre</h2>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Strukturierte Hilfestellungen zur Optimierung schriftlicher Textproduktionen und formaler Grammatik.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Writing Guides -->
+                    <div class="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-pen-nib text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">Methodische Textproduktion (Writing)</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60 space-y-2">
+                                <strong class="text-zinc-950 dark:text-white block">Stellungnahme verfassen (Comment):</strong>
+                                <p>Ein strukturierter Aufsatz folgt einer dreiteiligen Gliederung:</p>
+                                <ul class="list-disc list-inside space-y-1.5 pl-2 text-zinc-500 dark:text-zinc-400">
+                                    <li><strong>1. Introduction (Einleitung):</strong> Definition des Streitpunktes, These formulieren. <br><em class="text-brand-600 dark:text-brand-400">"Nowadays, the controversy surrounding... is a widely discussed issue."</em></li>
+                                    <li><strong>2. Main Body (Hauptteil):</strong> Kontra-Argumente zuerst nennen, abschließend eigene (starke) Argumente ausführen.</li>
+                                    <li><strong>3. Conclusion (Fazit):</strong> Zusammenfassung der logischen Ergebnisse ohne neue Argumente.<br><em class="text-brand-600 dark:text-brand-400">"In conclusion, weighing the pros and cons..."</em></li>
+                                </ul>
+                            </div>
+
+                            <div class="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60 space-y-2">
+                                <strong class="text-zinc-950 dark:text-white block">Satzverknüpfer (Linking Words):</strong>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="font-medium text-zinc-900 dark:text-zinc-300 mb-0.5">Ergänzend:</p>
+                                        <p class="text-zinc-500 dark:text-zinc-400">Furthermore, ... (Darüber hinaus)</p>
+                                        <p class="text-zinc-500 dark:text-zinc-400">In addition, ... (Zusätzlich)</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-zinc-900 dark:text-zinc-300 mb-0.5">Kontrastierend:</p>
+                                        <p class="text-zinc-500 dark:text-zinc-400">However, ... (Jedoch)</p>
+                                        <p class="text-zinc-500 dark:text-zinc-400">On the other hand, ... (Andererseits)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grammar Crash Course -->
+                    <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
+                        <div class="flex items-center space-x-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                            <i class="fa-solid fa-code-commit text-zinc-400 dark:text-zinc-500 text-sm"></i>
+                            <h3 class="font-semibold text-xs text-zinc-900 dark:text-zinc-300 uppercase tracking-wider">Grammatikalischer Fokus</h3>
+                        </div>
+                        <div class="space-y-4 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800/60">
+                                <strong class="text-zinc-950 dark:text-white block mb-1.5">Conditionals (Bedingungssätze):</strong>
+                                <ul class="space-y-3">
+                                    <li>
+                                        <strong class="text-zinc-900 dark:text-zinc-300 block text-[11px]">Type I (Realistisch):</strong>
+                                        <code class="bg-zinc-200 dark:bg-zinc-800 px-1 py-0.5 rounded text-[10px] dark:text-zinc-300">If + Simple Present || Will-Future</code><br>
+                                        <span class="italic text-zinc-400 dark:text-zinc-500">"If it rains, we will stay home."</span>
+                                    </li>
+                                    <li>
+                                        <strong class="text-zinc-900 dark:text-zinc-300 block text-[11px]">Type II (Hypothetisch):</strong>
+                                        <code class="bg-zinc-200 dark:bg-zinc-800 px-1 py-0.5 rounded text-[10px] dark:text-zinc-300">If + Simple Past || Would + Infinitiv</code><br>
+                                        <span class="italic text-zinc-400 dark:text-zinc-500">"If I had money, I would buy a car."</span>
+                                    </li>
+                                    <li>
+                                        <strong class="text-zinc-900 dark:text-zinc-300 block text-[11px]">Type III (Unmöglich):</strong>
+                                        <code class="bg-zinc-200 dark:bg-zinc-800 px-1 py-0.5 rounded text-[10px] dark:text-zinc-300">If + Past Perfect || Would have + Past Participle</code><br>
+                                        <span class="italic text-zinc-400 dark:text-zinc-500">"If we had studied, we would have passed."</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: ENGLISH READING COMPREHENSION -->
+            <section id="tab-english-reading" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Englisch: Reading Comprehension</h2>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Lies die wissenschaftliche Quelle und beantworte die Fragen dazu.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Text Layout (Warm aesthetic for reading) -->
+                    <div class="lg:col-span-7 bg-amber-50/40 dark:bg-zinc-900/30 rounded-xl border border-amber-100/60 dark:border-zinc-800 p-6 md:p-8 shadow-sm space-y-4">
+                        <span class="bg-amber-100/60 dark:bg-zinc-800 text-amber-900 dark:text-zinc-300 text-[10px] font-semibold px-2 py-0.5 rounded uppercase tracking-wider">Originaler Prüfungstext</span>
+                        <h3 class="font-semibold text-lg text-zinc-950 dark:text-white leading-snug">The Rise of Smart Cities: A Path to the Future?</h3>
+                        
+                        <!-- Text Segment -->
+                        <div class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar pr-3">
+                            <p>Today, more than half of the world's population lives in urban areas, and that number is expected to grow significantly over the next few decades. To manage the immense pressures of rapid urbanization, metropolitan planners are increasingly turning to technology to construct what are known as "Smart Cities". By integrating the Internet of Things (IoT), artificial intelligence, and cutting-edge sensor technology, these smart environments promise to optimize public resources, reduce carbon footprints, and make daily life much more convenient for their inhabitants.</p>
+                            
+                            <p>One prime example of a functioning smart city system is intelligent traffic routing. Sensors placed along major city streets can detect real-time traffic jams and automatically adjust the duration of traffic light cycles. This keeps cars moving efficiently, reducing emissions caused by idling engines, and saving commuters valuable time. In some Scandinavian cities, trash containers are equipped with ultrasonic level sensors. When a bin is nearly full, it sends a digital notification directly to the local waste collection department. The collection trucks then only drive to the bins that actually need emptying, dramatically reducing fuel consumption.</p>
+                            
+                            <p>However, critics of the smart city transformation argue that there are major concerns regarding digital privacy and massive surveillance. With thousands of cameras, sensors, and continuous data collection networks operating simultaneously, it is almost impossible for an individual to move through public spaces completely anonymously. Many people worry that this valuable private information could be compromised by cyber-criminals or used by governments to monitor and restrict citizen behaviors. Additionally, high-tech infrastructure requires incredibly expensive financial investments, which might lead to higher taxes for local citizens.</p>
+                        </div>
+                    </div>
+
+                    <!-- Question segment -->
+                    <div class="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-5" id="reading-quiz-box">
+                        <div class="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center justify-between text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
+                            <span>Aufgabenstellung</span>
+                            <span id="reading-question-tracker" class="text-zinc-900 dark:text-white font-bold">Frage 1 von 3</span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <p id="reading-question-text" class="text-xs font-semibold text-zinc-900 dark:text-white leading-relaxed"></p>
+                            
+                            <!-- Options container -->
+                            <div id="reading-options-container" class="space-y-2">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Feedback area -->
+                        <div id="reading-feedback" class="hidden text-[11px] p-3 rounded-lg font-medium border"></div>
+
+                        <!-- Footer Actions -->
+                        <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                            <button id="reading-prev-btn" onclick="navReadingQuestion(-1)" class="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 disabled:opacity-30" disabled>
+                                Zurück
+                            </button>
+                            <button id="reading-next-btn" onclick="navReadingQuestion(1)" class="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-semibold text-[11px] px-3.5 py-1.5 rounded-lg transition-colors">
+                                Weiter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: ENGLISH VOCABULARY FLASHCARDS -->
+            <section id="tab-english-vocabulary" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Englisch: Fachwortschatz &amp; Redemittel</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Lerne die wichtigsten Begriffe und Konnektoren für Textproduktionen.</p>
+                    </div>
+                    <button onclick="shuffleVocabulary()" class="bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200/60 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-semibold text-xs px-3 py-2 rounded-lg flex items-center space-x-1.5 self-start transition-colors border border-zinc-200/50 dark:hover:border-zinc-700">
+                        <i class="fa-solid fa-shuffle"></i>
+                        <span>Mischen</span>
+                    </button>
+                </div>
+
+                <!-- Flashcard Widget -->
+                <div class="max-w-md mx-auto space-y-6">
+                    <div id="vocab-card-container" class="w-full aspect-[5/3] cursor-pointer animate-fade-in" onclick="flipVocabCard()">
+                        <div id="vocab-card" class="flip-card-inner relative w-full h-full shadow-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                            <!-- CARD FRONT (English) -->
+                            <div class="flip-card-front absolute inset-0 p-8 flex flex-col justify-between">
+                                <div class="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase text-zinc-400 dark:text-zinc-500">
+                                    <span>Vokabel-Karte</span>
+                                    <span id="vocab-card-side-front">Vorderseite (EN)</span>
+                                </div>
+
+                                <div class="text-center py-4">
+                                    <h3 id="vocab-word-front" class="text-xl font-semibold tracking-tight text-zinc-950 dark:text-white">to increase</h3>
+                                    <p class="text-[10px] text-zinc-400 dark:text-zinc-500 mt-2">Tippen zum Umdrehen</p>
+                                </div>
+
+                                <div class="flex justify-between items-center text-[10px] text-zinc-400 dark:text-zinc-500">
+                                    <span>Wortschatz</span>
+                                    <span id="vocab-progress-front">Karte 1 / 15</span>
+                                </div>
+                            </div>
+
+                            <!-- CARD BACK (German) -->
+                            <div class="flip-card-back absolute inset-0 p-8 flex flex-col justify-between bg-zinc-50 dark:bg-zinc-950 rounded-xl">
+                                <div class="flex justify-between items-center text-[10px] font-bold tracking-widest uppercase text-zinc-400 dark:text-zinc-500">
+                                    <span>Übersetzung</span>
+                                    <span id="vocab-card-side-back">Rückseite (DE)</span>
+                                </div>
+
+                                <div class="text-center py-4 space-y-3">
+                                    <h3 id="vocab-word-back" class="text-xl font-semibold tracking-tight text-brand-700 dark:text-brand-400">steigen, zunehmen</h3>
+                                    
+                                    <!-- AI Example sentence placeholder -->
+                                    <div id="vocab-ai-sentence-box" class="hidden p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-left text-[10px] space-y-1.5 max-w-xs mx-auto">
+                                        <p class="font-semibold text-zinc-400 dark:text-zinc-500">Satzkontext (Gemini KI):</p>
+                                        <p class="italic text-zinc-800 dark:text-zinc-200 font-medium" id="vocab-ai-sentence-en"></p>
+                                        <p class="text-zinc-500 dark:text-zinc-400 animate-fade-in" id="vocab-ai-sentence-de"></p>
+                                    </div>
+                                    <button id="vocab-ai-btn" onclick="generateVocabExample(event)" class="text-[10px] font-semibold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1.5 bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:bg-zinc-50 dark:hover:bg-zinc-850">
+                                        <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Beispielsatz generieren (KI)
+                                    </button>
+                                </div>
+
+                                <div class="flex justify-between items-center text-[10px] text-zinc-400 dark:text-zinc-500">
+                                    <span>Prüfungsrelevant</span>
+                                    <span id="vocab-progress-back">Karte 1 / 15</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Navigation -->
+                    <div class="flex justify-between items-center gap-4 max-w-sm mx-auto">
+                        <button onclick="prevVocabCard()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold text-xs px-3 py-2.5 rounded-lg transition-all flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                            <span>Zurück</span>
+                        </button>
+
+                        <button onclick="markVocabAsMastered()" class="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold text-xs px-4 py-2.5 rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+                            <i class="fa-solid fa-check text-[10px]"></i>
+                            <span>Gewusst (+10 XP)</span>
+                        </button>
+
+                        <button onclick="nextVocabCard()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-semibold text-xs px-3 py-2.5 rounded-lg transition-all flex items-center space-x-1">
+                            <span>Weiter</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: ENGLISH AI WRITER -->
+            <section id="tab-english-ai-writer" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">KI-Schreibwerkstatt</h2>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Verfasse freie Texte zu typischen ZP10-Themen und erhalte sofortiges Feedback von unserem Gemini-Prüfer.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Inputs -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-sm">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block">1. Thema auswählen</label>
+                                <select id="ai-writer-topic" onchange="updateWritingPromptHint()" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-3 rounded-xl text-xs font-semibold text-zinc-800 dark:text-zinc-200 focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600">
+                                    <option value="smartphones">Comment: Should smartphones be banned in schools?</option>
+                                    <option value="ai_education">Comment: Is Artificial Intelligence a threat or a tool for education?</option>
+                                    <option value="cafeteria">E-Mail: Formal complaint to the principal about the school cafeteria</option>
+                                    <option value="free">Freies Thema (Eigener Entwurf)</option>
+                                </select>
+                            </div>
+
+                            <!-- Prompt hints -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950/40 rounded-lg border border-zinc-150 dark:border-zinc-850 text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1">
+                                <strong class="text-zinc-850 dark:text-zinc-300 block">Hilfestellung / Leitlinie:</strong>
+                                <p id="ai-writer-prompt-hint" class="leading-relaxed">Verfasse eine dialektische Stellungnahme (Comment). Nenne Pro- und Kontra-Argumente. Verwende Linking Words wie "However", "In addition" und "Furthermore". Minimum 30 Wörter.</p>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block">2. Deinen Text entwerfen</label>
+                                <textarea id="ai-writer-textarea" oninput="updateWritingWordCounter()" placeholder="Write your text here... (Minimum 30 words recommended)" class="w-full h-48 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl text-xs focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 font-sans leading-relaxed text-zinc-800 dark:text-zinc-100"></textarea>
+                                <div class="flex justify-between items-center text-[10px] text-zinc-400 dark:text-zinc-500 px-1">
+                                    <span id="ai-writer-word-counter">Wörter: 0</span>
+                                    <span>Nutze mindestens 2 Bindewörter.</span>
+                                </div>
+                            </div>
+
+                            <button id="ai-writer-submit-btn" onclick="gradeEssayWithAI()" class="w-full bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold p-3.5 rounded-xl transition-all text-xs shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Aufsatz analysieren &amp; bewerten</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Outputs: Realtime Gemini evaluation -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm h-full flex flex-col justify-between min-h-[400px]">
+                            <div class="space-y-4">
+                                <div class="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center justify-between">
+                                    <span class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block">AI-Prüfungsausforderung</span>
+                                    <span id="ai-writer-status-tag" class="text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded">Bereit</span>
+                                </div>
+
+                                <!-- Initial placeholder -->
+                                <div id="ai-writer-placeholder" class="py-12 text-center space-y-3">
+                                    <div class="w-10 h-10 bg-zinc-50 dark:bg-zinc-850 rounded-full flex items-center justify-center text-zinc-400 mx-auto border border-zinc-150 dark:border-zinc-800">
+                                        <i class="fa-solid fa-book-open"></i>
+                                    </div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 px-4 leading-relaxed">Schreibe einen Entwurf auf der linken Seite und klicke auf "Aufsatz analysieren", um ein detailliertes Gutachten nach ZP10-Standards zu erhalten.</p>
+                                </div>
+
+                                <!-- Loading indicator -->
+                                <div id="ai-writer-loading" class="hidden py-12 text-center space-y-4">
+                                    <div class="inline-block w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">Analysiere Syntax, Vokabular, Satzstrukturen und Linking Words über Gemini API...</p>
+                                </div>
+
+                                <!-- Result Render -->
+                                <div id="ai-writer-result-container" class="hidden space-y-4">
+                                    <!-- Grade tag -->
+                                    <div class="flex items-center justify-between p-3 bg-brand-50/50 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900/40 rounded-xl">
+                                        <span class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Geschätzte ZP10-Zensur:</span>
+                                        <span id="ai-writer-grade-val" class="text-xs font-bold bg-brand-600 text-white px-2.5 py-0.5 rounded-md">Gut (2)</span>
+                                    </div>
+                                    <!-- Markdown Feedback content -->
+                                    <div id="ai-writer-feedback-text" class="text-xs text-zinc-650 dark:text-zinc-350 space-y-2 leading-relaxed max-h-[350px] overflow-y-auto pr-2 custom-scrollbar markdown-render">
+                                        <!-- Injected as Markdown converted to basic HTML -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback Footer -->
+                            <div class="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-[10px] text-zinc-400 dark:text-zinc-500 mt-4">
+                                <span>Basiert auf offiziellen ZP10 Anforderungsmaßstäben.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: EXAM SIMULATOR -->
+            <section id="tab-simulator" class="hidden space-y-6 animate-fade-in">
+                <div class="border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <h2 class="text-xl font-semibold text-zinc-950 dark:text-white">Prüfungs-Simulator</h2>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Interdisziplinäre Überprüfung unter Zeitdruck. Beantworte 10 randomisierte Fragen innerhalb des Limits.</p>
+                </div>
+
+                <!-- Simulation Start Panel -->
+                <div id="sim-start-panel" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 shadow-sm text-center space-y-5 max-w-xl mx-auto rounded-xl">
+                    <div class="w-12 h-12 bg-zinc-50 dark:bg-zinc-850 border border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-lg flex items-center justify-center text-lg mx-auto shadow-sm">
+                        <i class="fa-solid fa-stopwatch"></i>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h3 class="text-base md:text-lg font-semibold text-zinc-900 dark:text-white">Diagnoseverfahren einleiten</h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                            Dieses Modul simuliert den Zeitdruck der echten ZP10. Du hast ein Zeitfenster von 5 Minuten für 10 gemischte Aufgaben der Fachrichtungen Mathematik und Englisch. Ein vorzeitiger Abbruch speichert deine Ergebnisse nicht.
+                        </p>
+                    </div>
+                    <button onclick="startSimulation()" class="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold px-5 py-3 rounded-lg transition-all w-full text-xs shadow-sm">
+                        Simulation starten
+                    </button>
+                </div>
+
+                <!-- Active Exam Arena -->
+                <div id="sim-active-box" class="hidden bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950/40 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-block w-2 h-2 rounded-full bg-zinc-600 dark:bg-zinc-400 animate-pulse"></span>
+                            <span class="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest">Testlauf läuft</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-xs font-semibold text-zinc-900 dark:text-white flex items-center space-x-1.5">
+                                <i class="fa-solid fa-clock text-zinc-500"></i>
+                                <span id="sim-timer" class="font-mono">05:00</span>
+                            </div>
+                            <div class="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider" id="sim-counter">
+                                Frage 1 von 10
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 md:p-8 space-y-6">
+                        <h4 id="sim-question-text" class="text-base md:text-lg font-medium text-zinc-900 dark:text-white tracking-tight text-center max-w-xl mx-auto leading-relaxed"></h4>
+                        
+                        <div id="sim-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto pt-4">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="bg-zinc-50/50 dark:bg-zinc-950/20 p-4 border-t border-zinc-200 dark:border-zinc-800 text-center">
+                        <button onclick="cancelSimulation()" class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300">
+                            Simulation abbrechen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Results Screen -->
+                <div id="sim-result-panel" class="hidden bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm text-center space-y-5 max-w-xl mx-auto">
+                    <div id="sim-result-icon" class="w-12 h-12 rounded-lg flex items-center justify-center text-lg mx-auto shadow-sm border"></div>
+                    <div class="space-y-1.5">
+                        <h3 id="sim-result-title" class="text-lg font-semibold text-zinc-900 dark:text-white"></h3>
+                        <p id="sim-result-desc" class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed"></p>
+                    </div>
+                    <div class="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-100 dark:border-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                        Erfolgsbilanz: <span id="sim-result-correct" class="text-zinc-900 dark:text-white font-bold"></span> von 10 korrekten Lösungen.
+                    </div>
+                    <button onclick="resetSimulationPanel()" class="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-semibold px-5 py-3 rounded-lg transition-all text-xs w-full">
+                        Workspace-Dashboard öffnen
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // GLOBAL USER PERFORMANCE TRACKING STATES
+        let userXP = 0;
+        let userLevel = 1;
+        let userStreak = 1;
+        let solvedTasksCount = 0;
+        let correctAnswersCount = 0;
+        let wrongAnswersCount = 0;
+
+        // Static Reading Task State
+        let currentReadingIndex = 0;
+        const readingQuestions = [
+            {
+                q: "What is the primary reason metropolitan planners are building 'Smart Cities'?",
+                options: [
+                    "To generate profit through massive global technological advertising.",
+                    "To handle rapid urban growth and optimize public resources.",
+                    "To force citizens to buy electric cars."
+                ],
+                correct: 1,
+                hint: "Absatz 1 hebt hervor: Metropolenplaner nutzen smarte Technologien, um dem 'immensen Druck rapider Urbanisierung' entgegenzuwirken."
+            },
+            {
+                q: "How do ultrasonic sensors in Scandinavian trash bins help the environment?",
+                options: [
+                    "They sort plastic from biological waste automatically inside the bin.",
+                    "They notify collection trucks only when full, reducing fuel usage of trips.",
+                    "They compost trash immediately using high-frequency digital waves."
+                ],
+                correct: 1,
+                hint: "Absatz 2 zeigt auf: Lkws fahren gezielt nur volle Mülleimer an. Dadurch wird der Kraftstoffverbrauch signifikant gesenkt."
+            },
+            {
+                q: "What is a main negative point raised by critics of Smart Cities?",
+                options: [
+                    "The systems are too slow to improve daily transportation routes.",
+                    "Continuous data collection can threaten personal digital privacy.",
+                    "The technology is not durable in cold winter environments."
+                ],
+                correct: 1,
+                hint: "Absatz 3 belegt: Kritiker befürchten durch die permanente Datenerfassung erhebliche Einbußen der persönlichen Privatsphäre."
+            }
+        ];
+
+        // Comprehensive Vocabulary List
+        const vocabularyDeck = [
+            { eng: "to increase", de: "steigen, zunehmen, vergrößern" },
+            { eng: "to decrease", de: "sinken, abnehmen, verringern" },
+            { eng: "consequence", de: "Konsequenz, Auswirkung, Folge" },
+            { eng: "however", de: "jedoch, allerdings" },
+            { eng: "furthermore", de: "des Weiteren, außerdem" },
+            { eng: "on the one hand", de: "einerseits" },
+            { eng: "on the other hand", de: "andererseits" },
+            { eng: "surveillance", de: "Überwachung, Kontrolle" },
+            { eng: "environment", de: "Umwelt, Umgebung" },
+            { eng: "challenge", de: "Herausforderung" },
+            { eng: "advantage", de: "Vorteil" },
+            { eng: "disadvantage", de: "Nachteil" },
+            { eng: "to avoid", de: "vermeiden, ausweichen" },
+            { eng: "crucial", de: "lebenswichtig, entscheidend" },
+            { eng: "opportunity", de: "Gelegenheit, Möglichkeit" }
+        ];
+        let currentVocabIndex = 0;
+        let isVocabFlipped = false;
+
+        // Math Generator Session State
+        let currentMathTask = null;
+        let mathSessionCounter = 0;
+
+        // Exam Simulator State
+        let simActive = false;
+        let simTimerInterval = null;
+        let simTimeRemaining = 300; 
+        let simCurrentQuestionIndex = 0;
+        let simCorrectAnswers = 0;
+        let simQuestionsList = [];
+
+        // Initialize state from localStorage on load
+        window.onload = function() {
+            loadProgress();
+            updateUIVisuals();
+            switchTab('dashboard');
+            generateMathTask();
+            renderReadingQuestion();
+            updateVocabCardDisplay();
+            syncThemeTogglerIcons();
+        };
+
+        // Navigation tab switching logic
+        function switchTab(tabId) {
+            document.querySelectorAll('main > div > section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            const targetTab = document.getElementById('tab-' + tabId);
+            if (targetTab) {
+                targetTab.classList.remove('hidden');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-zinc-100', 'dark:bg-zinc-800', 'text-zinc-900', 'dark:text-zinc-100');
+                btn.classList.add('text-zinc-500', 'dark:text-zinc-400', 'hover:bg-zinc-50', 'dark:hover:bg-zinc-800/50', 'hover:text-zinc-900', 'dark:hover:text-zinc-100');
+            });
+
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-zinc-500', 'dark:text-zinc-400', 'hover:bg-zinc-50', 'dark:hover:bg-zinc-800/50', 'hover:text-zinc-900', 'dark:hover:text-zinc-100');
+                activeBtn.classList.add('bg-zinc-100', 'dark:bg-zinc-800', 'text-zinc-900', 'dark:text-zinc-100');
+            }
+
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('translate-x-0')) {
+                toggleMobileMenu();
+            }
+        }
+
+        // Drawer Menu Switcher
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const icon = document.getElementById('menu-icon');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                
+                backdrop.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                }, 10);
+                
+                icon.className = 'fa-solid fa-xmark text-lg';
+            } else {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('-translate-x-full');
+                
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => {
+                    backdrop.classList.add('hidden');
+                }, 300);
+                
+                icon.className = 'fa-solid fa-bars text-lg';
+            }
+        }
+
+        // Dark/Light Theme Switcher
+        function toggleTheme() {
+            const root = document.documentElement;
+            if (root.classList.contains('dark')) {
+                root.classList.remove('dark');
+                localStorage.setItem('zp10_theme', 'light');
+            } else {
+                root.classList.add('dark');
+                localStorage.setItem('zp10_theme', 'dark');
+            }
+            syncThemeTogglerIcons();
+        }
+
+        function syncThemeTogglerIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            const sunIconDesk = document.getElementById('theme-icon-desktop');
+            const moonIconDesk = document.getElementById('theme-icon-desktop-dark');
+            const sunIconMob = document.getElementById('theme-icon-mobile');
+            const moonIconMob = document.getElementById('theme-icon-mobile-dark');
+
+            if (isDark) {
+                if (sunIconDesk) sunIconDesk.classList.add('hidden');
+                if (moonIconDesk) moonIconDesk.classList.remove('hidden');
+                if (sunIconMob) sunIconMob.classList.add('hidden');
+                if (moonIconMob) moonIconMob.classList.remove('hidden');
+            } else {
+                if (sunIconDesk) sunIconDesk.classList.remove('hidden');
+                if (moonIconDesk) moonIconDesk.classList.add('hidden');
+                if (sunIconMob) sunIconMob.classList.remove('hidden');
+                if (moonIconMob) moonIconMob.classList.add('hidden');
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('zp10_user_xp', userXP);
+            localStorage.setItem('zp10_user_level', userLevel);
+            localStorage.setItem('zp10_solved_count', solvedTasksCount);
+            localStorage.setItem('zp10_correct_count', correctAnswersCount);
+            localStorage.setItem('zp10_wrong_count', wrongAnswersCount);
+        }
+
+        function loadProgress() {
+            if (localStorage.getItem('zp10_user_xp') !== null) {
+                userXP = parseInt(localStorage.getItem('zp10_user_xp'));
+                userLevel = parseInt(localStorage.getItem('zp10_user_level'));
+                solvedTasksCount = parseInt(localStorage.getItem('zp10_solved_count'));
+                correctAnswersCount = parseInt(localStorage.getItem('zp10_correct_count'));
+                wrongAnswersCount = parseInt(localStorage.getItem('zp10_wrong_count'));
+            }
+        }
+
+        function resetAppStats() {
+            userXP = 0;
+            userLevel = 1;
+            solvedTasksCount = 0;
+            correctAnswersCount = 0;
+            wrongAnswersCount = 0;
+            saveProgress();
+            updateUIVisuals();
+            showToast("System zurückgesetzt", "Alle gespeicherten Leistungsdaten wurden entfernt.", "trash");
+        }
+
+        function earnXP(amount) {
+            userXP += amount;
+            const xpNeeded = userLevel * 100;
+            if (userXP >= xpNeeded) {
+                userXP -= xpNeeded;
+                userLevel++;
+                showToast("Kompetenzaufstieg", `Du hast Stufe ${userLevel} erreicht!`, "success");
+            }
+            saveProgress();
+            updateUIVisuals();
+        }
+
+        function updateUIVisuals() {
+            const xpNeeded = userLevel * 100;
+            const progressPercent = (userXP / xpNeeded) * 100;
+            
+            document.getElementById('user-level').innerText = userLevel;
+            document.getElementById('user-xp').innerText = userXP;
+            document.getElementById('next-level-xp').innerText = xpNeeded;
+            document.getElementById('xp-bar').style.width = progressPercent + '%';
+
+            document.getElementById('stat-solved').innerText = solvedTasksCount;
+            
+            const totalAttempts = correctAnswersCount + wrongAnswersCount;
+            const accuracy = totalAttempts > 0 ? Math.round((correctAnswersCount / totalAttempts) * 100) : 0;
+            document.getElementById('stat-accuracy').innerText = accuracy + '%';
+
+            let rank = "Einführungsphase";
+            if (userLevel >= 3) rank = "Orientierungsstufe";
+            if (userLevel >= 7) rank = "Fortgeschrittener Status";
+            if (userLevel >= 12) rank = "Prüfungsreife";
+            document.getElementById('stat-rank').innerText = rank;
+
+            updateAchievementsUI();
+        }
+
+        function updateAchievementsUI() {
+            if (correctAnswersCount >= 1) {
+                document.getElementById('badge-first-step').classList.remove('grayscale');
+            }
+            if (correctAnswersCount >= 10) {
+                document.getElementById('badge-math-whiz').classList.remove('grayscale');
+            }
+            if (correctAnswersCount >= 20) {
+                document.getElementById('badge-shakespeare').classList.remove('grayscale');
+            }
+        }
+
+        function showToast(title, message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastBg = document.getElementById('toast-icon-bg');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-msg').innerText = message;
+
+            toastBg.className = "p-1.5 rounded-md border text-xs";
+            
+            if (type === "success") {
+                toastBg.className = "p-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100";
+                toastIcon.className = "fa-solid fa-check";
+            } else if (type === "error") {
+                toastBg.className = "p-1.5 rounded-md border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400";
+                toastIcon.className = "fa-solid fa-triangle-exclamation";
+            } else if (type === "trash") {
+                toastBg.className = "p-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400";
+                toastIcon.className = "fa-solid fa-trash-can";
+            }
+
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-12', 'opacity-0');
+            }, 3000);
+        }
+
+        // DYNAMIC MATHEMATICS TASK GENERATION ENGINE
+        function generateMathTask() {
+            const selector = document.getElementById('math-category-selector').value;
+            let categories = ['linear', 'percent', 'pythagoras', 'quadratic'];
+            
+            let selectedType = selector;
+            if (selector === 'all') {
+                selectedType = categories[Math.floor(Math.random() * categories.length)];
+            }
+
+            let task = {
+                question: "",
+                answers: [],
+                correct: 0,
+                type: selectedType
+            };
+
+            document.getElementById('math-feedback').classList.add('hidden');
+            document.getElementById('math-ai-explanation-box').classList.add('hidden');
+
+            if (selectedType === 'linear') {
+                let x = Math.floor(Math.random() * 15) - 5; 
+                let a = Math.floor(Math.random() * 8) + 2;  
+                let b = Math.floor(Math.random() * 20) - 10; 
+                if (b === 0) b = 5;
+                let c = a * x + b;
+
+                task.question = `Löse nach x auf: ${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+                
+                let d1 = x + 1;
+                let d2 = x - 2;
+                let d3 = -x;
+                if (d3 === x) d3 = x + 3;
+
+                task.answers = [`x = ${x}`, `x = ${d1}`, `x = ${d2}`, `x = ${d3}`];
+                task.correct = 0;
+            } 
+            else if (selectedType === 'percent') {
+                let modes = ['W', 'p', 'G'];
+                let mode = modes[Math.floor(Math.random() * modes.length)];
+
+                if (mode === 'W') {
+                    let g = Math.floor(Math.random() * 16) * 50 + 100; 
+                    let percentArr = [5, 10, 15, 20, 25, 50];
+                    let p = percentArr[Math.floor(Math.random() * percentArr.length)];
+                    let w = (g * p) / 100;
+
+                    task.question = `Berechne: Wie viel sind ${p}% von ${g} €?`;
+                    task.answers = [`${w} €`, `${w + 5} €`, `${w - 10} €`, `${(g * (p + 5)) / 100} €`];
+                    task.correct = 0;
+                } else if (mode === 'p') {
+                    let g = Math.floor(Math.random() * 5) * 100 + 200; 
+                    let percentArr = [10, 20, 25, 50];
+                    let p = percentArr[Math.floor(Math.random() * percentArr.length)];
+                    let w = (g * p) / 100;
+
+                    task.question = `Wie viel Prozent (%) sind ${w} € von ${g} €?`;
+                    task.answers = [`${p}%`, `${p - 5}%`, `${p + 10}%`, `${(w/g) * 100 + 15}%`];
+                    task.correct = 0;
+                } else {
+                    let percentArr = [10, 20, 25, 50];
+                    let p = percentArr[Math.floor(Math.random() * percentArr.length)];
+                    let g = Math.floor(Math.random() * 8) * 50 + 100; 
+                    let w = (g * p) / 100;
+
+                    task.question = `Berechne den Grundwert: ${w} € entsprechen ${p}% des Gesamtwertes. Wie hoch ist der Gesamtwert?`;
+                    task.answers = [`${g} €`, `${g + 50} €`, `${g - 50} €`, `${g * 2} €`];
+                    task.correct = 0;
+                }
+            } 
+            else if (selectedType === 'pythagoras') {
+                const triples = [
+                    { a: 3, b: 4, c: 5 },
+                    { a: 5, b: 12, c: 13 },
+                    { a: 6, b: 8, c: 10 },
+                    { a: 8, b: 15, c: 17 }
+                ];
+                let chosen = triples[Math.floor(Math.random() * triples.length)];
+                let askHypotenuse = Math.random() < 0.5;
+
+                if (askHypotenuse) {
+                    task.question = `Ein rechtwinkliges Dreieck besitzt die Katheten a = ${chosen.a} cm und b = ${chosen.b} cm. Berechne die Hypotenuse c.`;
+                    task.answers = [`c = ${chosen.c} cm`, `c = ${chosen.c + 2} cm`, `c = ${chosen.a + chosen.b} cm`, `c = ${Math.round(Math.sqrt(chosen.a * chosen.b))} cm`];
+                } else {
+                    task.question = `Ein rechtwinkliges Dreieck besitzt die Kathete a = ${chosen.a} cm und die Hypotenuse c = ${chosen.c} cm. Berechne die Kathete b.`;
+                    task.answers = [`b = ${chosen.b} cm`, `b = ${chosen.b - 1} cm`, `b = ${chosen.c - chosen.a} cm`, `b = ${chosen.b + 3} cm` ];
+                }
+                task.correct = 0;
+            } 
+            else if (selectedType === 'quadratic') {
+                let d = Math.floor(Math.random() * 5) + 1; 
+                let e = Math.floor(Math.random() * 5) + 1; 
+                if (d === e) e++;
+
+                let sum = d + e;
+                let prod = d * e;
+
+                task.question = `Bestimme die Nullstellen f(x) = 0 für die Parabel: f(x) = x² - ${sum}x + ${prod}`;
+                task.answers = [
+                    `x1 = ${d} ; x2 = ${e}`,
+                    `x1 = -${d} ; x2 = -${e}`,
+                    `x1 = ${d + 1} ; x2 = ${e - 1}`,
+                    `x1 = 0 ; x2 = ${prod}`
+                ];
+                task.correct = 0;
+            }
+
+            shuffleAnswers(task);
+            currentMathTask = task;
+
+            document.getElementById('math-current-category-label').innerText = translateCategory(task.type);
+            document.getElementById('math-task-question').innerText = task.question;
+
+            const grid = document.getElementById('math-options-grid');
+            grid.innerHTML = '';
+
+            task.answers.forEach((ans, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full min-h-[50px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 font-semibold p-4 rounded-xl text-xs transition-all text-left flex items-center justify-between group";
+                btn.innerHTML = `
+                    <span>${ans}</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400"></i>
+                `;
+                btn.onclick = () => submitMathAnswer(index);
+                grid.appendChild(btn);
+            });
+        }
+
+        function shuffleAnswers(task) {
+            let arr = task.answers.map((ans, idx) => ({ text: ans, originalIndex: idx }));
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            task.answers = arr.map(item => item.text);
+            task.correct = arr.findIndex(item => item.originalIndex === task.correct);
+        }
+
+        function translateCategory(type) {
+            switch(type) {
+                case 'linear': return 'Lineare Gleichung';
+                case 'percent': return 'Prozentrechnung';
+                case 'pythagoras': return 'Satz des Pythagoras';
+                case 'quadratic': return 'Quadratische Gleichung';
+                default: return 'Modul';
+            }
+        }
+
+        function submitMathAnswer(idx) {
+            const feedback = document.getElementById('math-feedback');
+            feedback.classList.remove('hidden', 'bg-zinc-50', 'dark:bg-zinc-950', 'text-zinc-700', 'dark:text-zinc-300', 'border-zinc-200', 'dark:border-zinc-800', 'bg-red-50', 'dark:bg-red-950/40', 'text-red-700', 'dark:text-red-400', 'border-red-200', 'dark:border-red-900');
+
+            document.getElementById('math-ai-explanation-box').classList.add('hidden');
+
+            if (idx === currentMathTask.correct) {
+                feedback.innerHTML = `
+                    <div class="space-y-2">
+                        <p><i class="fa-solid fa-circle-check mr-2 text-zinc-500"></i> Korrekt gelöst. Die Antwort ist mathematisch schlüssig.</p>
+                        <button onclick="explainMathWithAI()" class="mt-1 text-[10px] bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-brand-600 dark:text-brand-400 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5 shadow-sm transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Rechenweg erklären lassen (Gemini KI)
+                        </button>
+                    </div>
+                `;
+                feedback.className = "py-2.5 px-4 rounded-lg font-medium text-xs max-w-md mx-auto text-center border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800";
+                
+                solvedTasksCount++;
+                correctAnswersCount++;
+                mathSessionCounter++;
+                document.getElementById('session-math-count').innerText = mathSessionCounter;
+                
+                showToast("Korrekt", "Lösungsansatz erfolgreich validiert. +15 XP", "success");
+                earnXP(15);
+            } else {
+                feedback.innerHTML = `
+                    <div class="space-y-2">
+                        <p><i class="fa-solid fa-circle-xmark mr-2 text-red-500"></i> Fehlberechnung. Bitte Lösungsverfahren überprüfen und erneut versuchen.</p>
+                        <button onclick="explainMathWithAI()" class="mt-1 text-[10px] bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-brand-600 dark:text-brand-400 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 inline-flex items-center gap-1.5 shadow-sm transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[9px]"></i> Rechenweg erklären lassen (Gemini KI)
+                        </button>
+                    </div>
+                `;
+                feedback.className = "py-2.5 px-4 rounded-lg font-medium text-xs max-w-md mx-auto text-center border bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200/60 dark:border-red-900/40";
+                
+                wrongAnswersCount++;
+                saveProgress();
+                updateUIVisuals();
+                showToast("Fehlberechnung", "Der gewählte Wert weicht ab.", "error");
+            }
+        }
+
+        // ENGLISH READING COMPREHENSION CONTROLS
+        function renderReadingQuestion() {
+            const q = readingQuestions[currentReadingIndex];
+            document.getElementById('reading-question-tracker').innerText = `Frage ${currentReadingIndex + 1} von ${readingQuestions.length}`;
+            document.getElementById('reading-question-text').innerText = q.q;
+
+            const container = document.getElementById('reading-options-container');
+            container.innerHTML = '';
+
+            const feedback = document.getElementById('reading-feedback');
+            feedback.classList.add('hidden');
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 text-xs font-semibold p-3.5 rounded-xl transition-all text-left flex items-start space-x-2 min-h-[44px]";
+                btn.innerHTML = `
+                    <span class="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold text-[10px] h-4.5 w-4.5 rounded flex items-center justify-center shrink-0 mt-0.5">${String.fromCharCode(65 + idx)}</span>
+                    <span class="flex-1">${opt}</span>
+                `;
+                btn.onclick = () => submitReadingAnswer(idx);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('reading-prev-btn').disabled = currentReadingIndex === 0;
+            if (currentReadingIndex === readingQuestions.length - 1) {
+                document.getElementById('reading-next-btn').innerText = "Fertigstellen";
+            } else {
+                document.getElementById('reading-next-btn').innerText = "Weiter";
+            }
+        }
+
+        function submitReadingAnswer(idx) {
+            const q = readingQuestions[currentReadingIndex];
+            const feedback = document.getElementById('reading-feedback');
+            feedback.classList.remove('hidden', 'bg-zinc-50', 'dark:bg-zinc-950', 'text-zinc-800', 'dark:text-zinc-200', 'border-zinc-200', 'dark:border-zinc-800', 'bg-red-50', 'dark:bg-red-950/40', 'text-red-700', 'dark:text-red-400', 'border-red-200', 'dark:border-red-900');
+
+            if (idx === q.correct) {
+                feedback.innerHTML = `<p class="font-bold">✓ Richtige Interpretation</p><p class="text-[10px] font-normal mt-0.5">${q.hint}</p>`;
+                feedback.className = "text-[11px] p-3 rounded-lg font-medium border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800";
+                
+                solvedTasksCount++;
+                correctAnswersCount++;
+                showToast("Korrekte Auswertung", "Leseanalyse korrekt. +20 XP", "success");
+                earnXP(20);
+            } else {
+                feedback.innerHTML = `<p class="font-bold">✗ Ungenau interpretiert</p><p class="text-[10px] font-normal mt-0.5">Bitte prüfe den Quellentext auf implizite Synonyme.</p>`;
+                feedback.className = "text-[11px] p-3 rounded-lg font-medium border bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200/60 dark:border-red-900/40";
+                
+                wrongAnswersCount++;
+                saveProgress();
+                updateUIVisuals();
+                showToast("Inkonsistente Analyse", "Bitte den Quellentext strukturierter prüfen.", "error");
+            }
+        }
+
+        function navReadingQuestion(dir) {
+            currentReadingIndex += dir;
+            if (currentReadingIndex < 0) currentReadingIndex = 0;
+            if (currentReadingIndex >= readingQuestions.length) {
+                currentReadingIndex = readingQuestions.length - 1;
+                showToast("Abgeschlossen", "Verständnisprüfung erfolgreich absolviert.", "success");
+                switchTab('dashboard');
+                return;
+            }
+            renderReadingQuestion();
+        }
+
+        // VOCABULARY DECK FUNCTIONS
+        function updateVocabCardDisplay() {
+            const vocab = vocabularyDeck[currentVocabIndex];
+            document.getElementById('vocab-progress-front').innerText = `Karte ${currentVocabIndex + 1} von ${vocabularyDeck.length}`;
+            document.getElementById('vocab-progress-back').innerText = `Karte ${currentVocabIndex + 1} von ${vocabularyDeck.length}`;
+            
+            document.getElementById('vocab-word-front').innerText = vocab.eng;
+            document.getElementById('vocab-word-back').innerText = vocab.de;
+
+            // Reset AI Example container
+            document.getElementById('vocab-ai-sentence-box').classList.add('hidden');
+            document.getElementById('vocab-ai-btn').classList.remove('hidden');
+
+            const card = document.getElementById('vocab-card-container');
+            if (isVocabFlipped) {
+                card.classList.add('flipped');
+            } else {
+                card.classList.remove('flipped');
+            }
+        }
+
+        function flipVocabCard() {
+            isVocabFlipped = !isVocabFlipped;
+            updateVocabCardDisplay();
+        }
+
+        function nextVocabCard() {
+            isVocabFlipped = false;
+            currentVocabIndex = (currentVocabIndex + 1) % vocabularyDeck.length;
+            updateVocabCardDisplay();
+        }
+
+        function prevVocabCard() {
+            isVocabFlipped = false;
+            currentVocabIndex = (currentVocabIndex - 1 + vocabularyDeck.length) % vocabularyDeck.length;
+            updateVocabCardDisplay();
+        }
+
+        function shuffleVocabulary() {
+            isVocabFlipped = false;
+            for (let i = vocabularyDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [vocabularyDeck[i], vocabularyDeck[j]] = [vocabularyDeck[j], vocabularyDeck[i]];
+            }
+            currentVocabIndex = 0;
+            updateVocabCardDisplay();
+            showToast("Gemischt", "Der Wortschatz wurde neu randomisiert.", "success");
+        }
+
+        function markVocabAsMastered() {
+            showToast("Wortschatz gefestigt", "Begriff erfolgreich eingeprägt. +10 XP", "success");
+            earnXP(10);
+            nextVocabCard();
+        }
+
+        // SIMULATED EXAM POOL
+        const simQuestionsDatabase = [
+            { q: "Löse: 4x - 8 = 12", options: ["x = 5", "x = 4", "x = 3", "x = 2"], correct: 0 },
+            { q: "Berechne: 20% von 500 €", options: ["50 €", "100 €", "150 €", "200 €"], correct: 1 },
+            { q: "Pythagoras: Katheten a = 6, b = 8. Hypotenuse c = ?", options: ["c = 10", "c = 14", "c = 12", "c = 9"], correct: 0 },
+            { q: "English: Which Conditional Type is 'If I were you, I would study harder'?", options: ["Type I", "Type II", "Type III"], correct: 1 },
+            { q: "What is the English word for 'Auswirkung/Konsequenz'?", options: ["consequence", "influence", "accident", "advantage"], correct: 0 },
+            { q: "Berechne die Nullstellen von f(x) = x² - 5x + 6", options: ["x1=2, x2=3", "x1=1, x2=6", "x1=-2, x2=-3", "x1=0, x2=5"], correct: 0 },
+            { q: "Zinseszins: 1000€ mit 2% Zinsen angelegt für 2 Jahre. Endkapital?", options: ["1040,40 €", "1040,00 €", "1020,00 €", "1080,20 €"], correct: 0 },
+            { q: "English: Complete: 'Many books ___ in English last year.' (Passive)", options: ["were written", "are written", "was written", "have written"], correct: 0 },
+            { q: "English: What is the antonym of 'to increase'?", options: ["to decrease", "to rise", "to construct", "to focus"], correct: 0 },
+            { q: "Berechne: Wie viel Prozent sind 25 € von 100 €?", options: ["25%", "50%", "10%", "5%"], correct: 0 }
+        ];
+
+        function startSimulation() {
+            simActive = true;
+            simTimeRemaining = 300; 
+            simCurrentQuestionIndex = 0;
+            simCorrectAnswers = 0;
+
+            simQuestionsList = [...simQuestionsDatabase];
+            for (let i = simQuestionsList.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [simQuestionsList[i], simQuestionsList[j]] = [simQuestionsList[j], simQuestionsList[i]];
+            }
+
+            document.getElementById('sim-start-panel').classList.add('hidden');
+            document.getElementById('sim-active-box').classList.remove('hidden');
+
+            renderSimQuestion();
+
+            simTimerInterval = setInterval(() => {
+                simTimeRemaining--;
+                updateSimTimerUI();
+
+                if (simTimeRemaining <= 0) {
+                    endSimulation(true);
+                }
+            }, 1000);
+        }
+
+        function updateSimTimerUI() {
+            const mins = Math.floor(simTimeRemaining / 60);
+            const secs = simTimeRemaining % 60;
+            document.getElementById('sim-timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function renderSimQuestion() {
+            const q = simQuestionsList[simCurrentQuestionIndex];
+            document.getElementById('sim-counter').innerText = `Frage ${simCurrentQuestionIndex + 1} von 10`;
+            document.getElementById('sim-question-text').innerText = q.q;
+
+            const grid = document.getElementById('sim-options-grid');
+            grid.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full min-h-[50px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-800 dark:text-zinc-200 font-semibold p-4 rounded-xl text-xs transition-all text-left flex items-center justify-between group";
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <i class="fa-solid fa-check text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400"></i>
+                `;
+                btn.onclick = () => submitSimAnswer(idx);
+                grid.appendChild(btn);
+            });
+        }
+
+        function submitSimAnswer(idx) {
+            const q = simQuestionsList[simCurrentQuestionIndex];
+            if (idx === q.correct) {
+                simCorrectAnswers++;
+            }
+
+            simCurrentQuestionIndex++;
+            if (simCurrentQuestionIndex < 10) {
+                renderSimQuestion();
+            } else {
+                endSimulation(false);
+            }
+        }
+
+        function cancelSimulation() {
+            clearInterval(simTimerInterval);
+            simActive = false;
+            document.getElementById('sim-active-box').classList.add('hidden');
+            document.getElementById('sim-start-panel').classList.remove('hidden');
+            showToast("Lauf abgebrochen", "Die Diagnose wurde vorzeitig gestoppt.", "error");
+        }
+
+        function endSimulation(timeout = false) {
+            clearInterval(simTimerInterval);
+            simActive = false;
+
+            document.getElementById('sim-active-box').classList.add('hidden');
+            document.getElementById('sim-result-panel').classList.remove('hidden');
+
+            const title = document.getElementById('sim-result-title');
+            const desc = document.getElementById('sim-result-desc');
+            const icon = document.getElementById('sim-result-icon');
+            const scoreDisplay = document.getElementById('sim-result-correct');
+
+            scoreDisplay.innerText = simCorrectAnswers;
+
+            if (timeout) {
+                title.innerText = "Sollzeit überschritten";
+                desc.innerText = "Das zeitlich vorgegebene Bearbeitungsfenster von 5 Minuten wurde geschlossen.";
+                icon.className = "w-12 h-12 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-350 rounded-lg flex items-center justify-center text-lg mx-auto";
+                icon.innerHTML = `<i class="fa-solid fa-hourglass-end"></i>`;
+            } else if (simCorrectAnswers >= 8) {
+                title.innerText = "Zielsetzung übertroffen";
+                desc.innerText = "Die ausgewertete Leistung attestiert eine hervorragende strukturelle Abdeckung der ZP10-Inhalte.";
+                icon.className = "w-12 h-12 bg-zinc-900 dark:bg-zinc-100 border border-zinc-900 dark:border-zinc-200 text-white dark:text-zinc-950 rounded-lg flex items-center justify-center text-lg mx-auto";
+                icon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+                earnXP(100); 
+            } else if (simCorrectAnswers >= 5) {
+                title.innerText = "Leistungsgrenze erreicht";
+                desc.innerText = "Das Fundament ist solide. Eine strukturierte Vertiefung des mathematischen Formelwerks wird empfohlen.";
+                icon.className = "w-12 h-12 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-lg flex items-center justify-center text-lg mx-auto";
+                icon.innerHTML = `<i class="fa-solid fa-thumbs-up"></i>`;
+                earnXP(50);
+            } else {
+                title.innerText = "Kompensationsbedarf identifiziert";
+                desc.innerText = "Die Auswertung zeigt Lücken in den Kernkompetenzen. Nutze die methodischen Dokumentationen in der Sidebar.";
+                icon.className = "w-12 h-12 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 rounded-lg flex items-center justify-center text-lg mx-auto";
+                icon.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>`;
+            }
+
+            solvedTasksCount += 10;
+            correctAnswersCount += simCorrectAnswers;
+            wrongAnswersCount += (10 - simCorrectAnswers);
+            saveProgress();
+            updateUIVisuals();
+        }
+
+        function resetSimulationPanel() {
+            document.getElementById('sim-result-panel').classList.add('hidden');
+            document.getElementById('sim-start-panel').classList.remove('hidden');
+            switchTab('dashboard');
+        }
+
+        // ==========================================
+        // GEMINI LLM API WORKSPACE INTEGRATION
+        // ==========================================
+
+        async function callGemini(userPrompt, systemPrompt = "") {
+            const apiKey = ""; // Canvas automatically supplies the active API key in runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }]
+            };
+            
+            if (systemPrompt) {
+                payload.systemInstruction = {
+                    parts: [{ text: systemPrompt }]
+                };
+            }
+            
+            let delay = 1000;
+            const maxRetries = 3;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) return text;
+                    throw new Error("No output candidate returned from Gemini.");
+                } catch (error) {
+                    if (attempt === maxRetries - 1) {
+                        throw error;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function explainMathWithAI() {
+            const explanationBox = document.getElementById('math-ai-explanation-box');
+            const explanationContent = document.getElementById('math-ai-explanation-content');
+            
+            explanationBox.classList.remove('hidden');
+            explanationContent.innerText = "Frage Gemini-Tutor nach Erklärungsmodell...";
+
+            const userPrompt = `Erkläre mir den mathematischen Rechenweg für folgende ZP10-Aufgabe schrittweise und verständlich auf Deutsch:
+            Aufgabe: "${currentMathTask.question}"
+            Richtige Lösung: "${currentMathTask.answers[currentMathTask.correct]}"
+            
+            Strukturiere die Erklärung mit kurzen Absätzen und Bulletpoints.`;
+            
+            const systemPrompt = "Du bist ein geduldiger, extrem klarer Mathematik-Nachhilfelehrer für die 10. Klasse einer deutschen Realschule/Gesamtschule. Erkläre Rechenwege didaktisch sinnvoll, übersichtlich und ohne komplizierte LaTeX-Formeln.";
+
+            try {
+                const explanation = await callGemini(userPrompt, systemPrompt);
+                explanationContent.innerHTML = marked.parse(explanation);
+            } catch (err) {
+                explanationContent.innerText = "Fehler bei der Kontaktaufnahme mit dem KI-Tutor. Bitte prüfe deine Internetverbindung.";
+                showToast("Verbindungsfehler", "Gemini API konnte nicht erreicht werden.", "error");
+            }
+        }
+
+        async function generateVocabExample(event) {
+            if (event) event.stopPropagation(); // Stop card from flipping back
+
+            const vocab = vocabularyDeck[currentVocabIndex];
+            const sentenceBox = document.getElementById('vocab-ai-sentence-box');
+            const enText = document.getElementById('vocab-ai-sentence-en');
+            const deText = document.getElementById('vocab-ai-sentence-de');
+            const aiBtn = document.getElementById('vocab-ai-btn');
+
+            aiBtn.classList.add('hidden');
+            sentenceBox.classList.remove('hidden');
+            enText.innerText = "Generiere Beispielsatz...";
+            deText.innerText = "";
+
+            const userPrompt = `Erstelle einen einfachen Beispielsatz auf Englisch auf ZP10-Niveau (10. Klasse), der das englische Wort/Phrase "${vocab.eng}" verwendet. Liefere dazu die genaue deutsche Übersetzung.
+            Formatvorgabe (strikt einhalten):
+            EN: [Englischer Beispielsatz]
+            DE: [Deutsche Übersetzung]`;
+
+            const systemPrompt = "Du bist ein hilfsbereiter Englischlehrer, der Schülern einfache, präzise und altersgerechte Beispielsätze zur Verfügung stellt.";
+
+            try {
+                const response = await callGemini(userPrompt, systemPrompt);
+                
+                // Parse the response format
+                const enMatch = response.match(/EN:\s*(.*)/i);
+                const deMatch = response.match(/DE:\s*(.*)/i);
+
+                if (enMatch && deMatch) {
+                    enText.innerText = enMatch[1].trim();
+                    deText.innerText = deMatch[1].trim();
+                } else {
+                    enText.innerText = response;
+                    deText.innerText = "";
+                }
+            } catch (err) {
+                enText.innerText = "Fehler bei der Generierung.";
+                aiBtn.classList.remove('hidden');
+                showToast("Verbindungsfehler", "Gemini API konnte nicht geladen werden.", "error");
+            }
+        }
+
+        const promptHints = {
+            smartphones: "Verfasse eine dialektische Stellungnahme (Comment). Nenne Pro- und Kontra-Argumente. Nutze Linking Words wie 'However', 'In addition' und 'Furthermore'. Beschreibe deine eigene Position am Ende.",
+            ai_education: "Discuss current opportunities (e.g., adaptive learning) and threats (cheating, lack of critical thinking). Structured structure: Introduction, Main Body, Conclusion.",
+            cafeteria: "Write a formal email. Keep a polite register. Start with 'Dear Mr./Ms. Principal' and use formal closing like 'Yours sincerely'. List specific points (food quality, prices, hygiene).",
+            free: "Schreibe einen freien Entwurf. Egal ob Comment, Letter oder E-Mail. Achte auf logischen Satzbau und abwechslungsreiches Vokabular."
+        };
+
+        function updateWritingPromptHint() {
+            const topic = document.getElementById('ai-writer-topic').value;
+            document.getElementById('ai-writer-prompt-hint').innerText = promptHints[topic];
+            document.getElementById('ai-writer-textarea').value = "";
+            updateWritingWordCounter();
+            
+            document.getElementById('ai-writer-placeholder').classList.remove('hidden');
+            document.getElementById('ai-writer-result-container').classList.add('hidden');
+            document.getElementById('ai-writer-status-tag').innerText = "Bereit";
+            document.getElementById('ai-writer-status-tag').className = "text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 px-2 py-0.5 rounded";
+        }
+
+        function updateWritingWordCounter() {
+            const text = document.getElementById('ai-writer-textarea').value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById('ai-writer-word-counter').innerText = `Wörter: ${words}`;
+        }
+
+        async function gradeEssayWithAI() {
+            const text = document.getElementById('ai-writer-textarea').value.trim();
+            const topic = document.getElementById('ai-writer-topic').value;
+            
+            if (!text) {
+                showToast("Fehlende Eingabe", "Bitte verfasse zuerst einen kurzen Entwurf.", "error");
+                return;
+            }
+
+            const placeholder = document.getElementById('ai-writer-placeholder');
+            const loading = document.getElementById('ai-writer-loading');
+            const resultBox = document.getElementById('ai-writer-result-container');
+            const feedbackText = document.getElementById('ai-writer-feedback-text');
+            const gradeVal = document.getElementById('ai-writer-grade-val');
+            const statusTag = document.getElementById('ai-writer-status-tag');
+            const submitBtn = document.getElementById('ai-writer-submit-btn');
+
+            placeholder.classList.add('hidden');
+            resultBox.classList.add('hidden');
+            loading.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            statusTag.innerText = "Analysiere...";
+            statusTag.className = "text-[10px] font-semibold bg-brand-100 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 px-2 py-0.5 rounded animate-pulse";
+
+            const userPrompt = `Bewerte die folgende englische Textproduktion für das Thema "${topic}".
+            
+            Schülertext:
+            "${text}"
+            
+            Analysiere den Text strikt nach ZP10-Maßstäben (Realschule/Gesamtschule, 10. Klasse).
+            Liefere:
+            1. Eine geschätzte Note (Schulnote von 1 bis 6, z.B. "Gut (2)").
+            2. Strukturierte Kriterien: Inhalt & Aufbau, Grammatik & Rechtschreibung, Wortschatz & Stil.
+            3. Erkannte Linking Words (z.B. "However", "In addition").
+            4. Einen kurzen optimierten Modellentwurf des Textes zur Orientierung.
+            
+            WICHTIG: Antworte auf Deutsch für die Kriterien, aber liefere englische Beispiele. 
+            Beginne deine Antwort mit der Note im Format: "NOTE: [Notenwert]" (z.B. NOTE: Befriedigend (3)).`;
+
+            const systemPrompt = "Du bist ein erfahrener Englisch-Fachprüfer für die Zentrale Prüfung 10 (ZP10). Gib fundierte, pädagogisch wertvolle Rückmeldungen mit konstruktivem Feedback. Hebe Stärken hervor und mache präzise Vorschläge bei Schwächen.";
+
+            try {
+                const response = await callGemini(userPrompt, systemPrompt);
+                
+                // Extract grade if possible
+                let grade = "Auswertung fertig";
+                const gradeMatch = response.match(/NOTE:\s*(.*)/i);
+                if (gradeMatch) {
+                    grade = gradeMatch[1].trim();
+                }
+
+                gradeVal.innerText = grade;
+                
+                const cleanResponse = response.replace(/NOTE:\s*(.*)/i, "").trim();
+                feedbackText.innerHTML = marked.parse(cleanResponse);
+
+                loading.classList.add('hidden');
+                resultBox.classList.remove('hidden');
+                
+                statusTag.innerText = "Bewertet";
+                statusTag.className = "text-[10px] font-semibold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 px-2 py-0.5 rounded";
+                
+                showToast("Gutachten fertig", "Textanalyse abgeschlossen! +50 XP", "success");
+                earnXP(50);
+                solvedTasksCount++;
+                saveProgress();
+                updateUIVisuals();
+            } catch (err) {
+                loading.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                statusTag.innerText = "Fehler";
+                statusTag.className = "text-[10px] font-semibold bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 px-2 py-0.5 rounded";
+                showToast("Fehlgeschlagen", "Fehler bei der Kommunikation mit dem Gemini-Prüfer.", "error");
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
